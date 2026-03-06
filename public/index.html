@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nexo.money — Platform Demo</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="description" content="Nexo.money - Corporate spend management platform for Indian businesses">
+    <meta name="theme-color" content="#0D9488">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+        }
+        .card-glow {
+            box-shadow: 0 0 40px rgba(13, 148, 136, 0.15), 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.4s ease;
+        }
+        .card-glow:hover {
+            box-shadow: 0 0 60px rgba(13, 148, 136, 0.25), 0 25px 70px rgba(0,0,0,0.4);
+            transform: translateY(-8px);
+        }
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .pulse-dot {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+        .stat-counter {
+            animation: countUp 1.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Subtle grid pattern -->
+    <div class="fixed inset-0 opacity-5" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 40px 40px;"></div>
+
+    <div class="relative z-10">
+        <!-- Header -->
+        <nav class="px-8 py-6 flex items-center justify-between max-w-7xl mx-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center font-bold text-lg">N</div>
+                <span class="text-xl font-bold tracking-tight">nexo.money</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-emerald-400 rounded-full pulse-dot"></span>
+                <span class="text-sm text-slate-400">Platform Demo v1.0</span>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <div class="max-w-7xl mx-auto px-8 pt-16 pb-12 text-center">
+            <div class="inline-block px-4 py-1.5 bg-teal-500/10 border border-teal-500/20 rounded-full text-teal-400 text-sm font-medium mb-6">
+                March 2026 · Confidential Demo
+            </div>
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
+                Corporate Spend,<br>
+                <span class="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">Simplified.</span>
+            </h1>
+            <p class="text-slate-400 text-lg max-w-2xl mx-auto mb-4">
+                Real-time spend controls, hierarchical credit allocation, MCC-based policies,
+                and a rewards engine — all in one platform built for Indian businesses.
+            </p>
+            <p class="text-slate-500 text-sm mb-16">
+                6 core modules built in-house · 6 partner integrations · 4 hybrid components
+            </p>
+
+            <!-- Two Portal Cards -->
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-20">
+
+                <!-- Cardholder App Card -->
+                <a href="app.html" class="block">
+                    <div class="card-glow bg-slate-800/80 backdrop-blur border border-slate-700/50 rounded-2xl p-8 text-left cursor-pointer">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-12 h-12 bg-teal-500/20 rounded-xl flex items-center justify-center">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold">Cardholder App</h3>
+                                <p class="text-xs text-teal-400 font-medium">MOBILE-FIRST</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-400 text-sm mb-6 leading-relaxed">
+                            The employee experience. OTP login with Indian mobile number,
+                            view corporate card, track transactions, earn rewards, submit invoices.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">OTP Login</span>
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">Card View</span>
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">Transactions</span>
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">Rewards</span>
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">AP Invoices</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-teal-400 font-semibold text-sm">
+                            Open Cardholder App
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Admin Portal Card -->
+                <a href="admin.html" class="block">
+
+                    <div class="card-glow bg-slate-800/80 backdrop-blur border border-slate-700/50 rounded-2xl p-8 text-left cursor-pointer">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold">Admin Portal</h3>
+                                <p class="text-xs text-emerald-400 font-medium">DESKTOP-FIRST</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-400 text-sm mb-6 leading-relaxed">
+                            The CFO command center. Manage org hierarchy, set spend policies,
+                            allocate credit, approve transactions, and view analytics.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">Dashboard</span>
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">Hierarchy</span>
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">Policies</span>
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">Credit</span>
+                            <span class="px-2.5 py-1 bg-slate-700/50 rounded-full text-xs text-slate-300">Approvals</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+                            Open Admin Portal
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Platform Stats -->
+            <div class="max-w-4xl mx-auto mb-20">
+                <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-8">Platform at a Glance</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="bg-slate-800/40 border border-slate-700/30 rounded-xl p-5 text-center">
+                        <div class="text-3xl font-bold text-teal-400 mb-1">6</div>
+                        <div class="text-xs text-slate-400">Core Modules<br>Built In-House</div>
+                    </div>
+                    <div class="bg-slate-800/40 border border-slate-700/30 rounded-xl p-5 text-center">
+                        <div class="text-3xl font-bold text-emerald-400 mb-1">10</div>
+                        <div class="text-xs text-slate-400">Step Auth Flow<br>&lt; 2 sec SLA</div>
+                    </div>
+                    <div class="bg-slate-800/40 border border-slate-700/30 rounded-xl p-5 text-center">
+                        <div class="text-3xl font-bold text-cyan-400 mb-1">500</div>
+                        <div class="text-xs text-slate-400">TPS Sustained<br>Throughput</div>
+                    </div>
+                    <div class="bg-slate-800/40 border border-slate-700/30 rounded-xl p-5 text-center">
+                        <div class="text-3xl font-bold text-violet-400 mb-1">14</div>
+                        <div class="text-xs text-slate-400">Week MVP<br>Timeline</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module Map -->
+            <div class="max-w-4xl mx-auto mb-20">
+                <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-8">Module Architecture</h2>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="bg-slate-800/40 border border-teal-500/20 rounded-xl p-5">
+                        <div class="text-teal-400 text-xs font-bold uppercase tracking-wider mb-3">Built In-House</div>
+                        <ul class="space-y-2 text-sm text-slate-300">
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full"></span>Business Hierarchies & RBAC</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full"></span>Spend Limits & Controls</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full"></span>Credit Limit Management</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full"></span>Rewards Engine</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full"></span>Accounts Payable</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full"></span>Analytics & Reporting</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-800/40 border border-violet-500/20 rounded-xl p-5">
+                        <div class="text-violet-400 text-xs font-bold uppercase tracking-wider mb-3">Partner / White-Label</div>
+                        <ul class="space-y-2 text-sm text-slate-300">
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-violet-400 rounded-full"></span>LeadSquared (Leads + CRM)</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-violet-400 rounded-full"></span>Signzy (KYC / KYB)</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-violet-400 rounded-full"></span>Fyle / Sage (Expenses)</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-violet-400 rounded-full"></span>Credgenics (Collections)</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-violet-400 rounded-full"></span>ClearTax (GST)</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-violet-400 rounded-full"></span>Razorpay (Payments)</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-800/40 border border-amber-500/20 rounded-xl p-5">
+                        <div class="text-amber-400 text-xs font-bold uppercase tracking-wider mb-3">Hybrid</div>
+                        <ul class="space-y-2 text-sm text-slate-300">
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>Credit Assessment (Perfios)</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>Card Issuance (M2P)</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>Credit Servicing (FinBox)</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>Analytics (In-house)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demo Instructions -->
+            <div class="max-w-2xl mx-auto mb-16">
+                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-8">
+                    <h3 class="font-bold text-lg mb-4">Demo Walkthrough</h3>
+                    <div class="space-y-4 text-left">
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 bg-teal-500/20 rounded-lg flex items-center justify-center text-teal-400 font-bold text-sm shrink-0">1</div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-200">Start with the Admin Portal</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Login with any email/password. Explore the CFO dashboard, set up hierarchy, configure spend policies, allocate credit, and review approvals.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 bg-teal-500/20 rounded-lg flex items-center justify-center text-teal-400 font-bold text-sm shrink-0">2</div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-200">Then open the Cardholder App</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Login with any Indian mobile number + any 4-digit OTP. See the employee experience — card management, transactions, rewards, invoice submission.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 bg-teal-500/20 rounded-lg flex items-center justify-center text-teal-400 font-bold text-sm shrink-0">3</div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-200">See the full flow</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Card swipe → Nexo engine checks MCC + budget + limits → approve/decline → reward points earned → balances updated in real-time.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center text-slate-600 text-xs pb-8">
+                nexo.money · Confidential · March 2026 · All data shown is simulated for demo purposes
+            </div>
+        </div>
+    </div>
+</body>
+</html>

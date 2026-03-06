@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexo Admin Portal - Corporate spend management and approval system">
+    <meta name="theme-color" content="#0F172A">
+    <meta property="og:title" content="Nexo Admin Portal">
+    <meta property="og:description" content="Corporate spend management and approval system">
+    <meta property="og:type" content="website">
+    <title>Nexo Admin Portal</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+
+        /* Loading screen */
+        .loading-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to br, #0f172a, #1e293b, #0d9488); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .loading-spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #0D9488; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: white; margin-top: 20px; font-weight: 500; }
+
+        /* Sidebar styles */
+        .sidebar-collapsed .sidebar-text { display: none; }
+        .sidebar-collapsed .sidebar-icon { width: 100%; text-align: center; }
+        .nav-item.active { background: rgba(13, 148, 136, 0.1); border-left: 3px solid #0D9488; }
+        .nav-item:hover { background: rgba(13, 148, 136, 0.05); }
+
+        /* Card animations */
+        .kpi-card { transition: all 0.3s ease; }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .chart-bar { transition: height 0.3s ease; }
+        .chart-bar:hover { opacity: 0.8; }
+
+        /* Trend indicators */
+        .trend-up { color: #10B981; }
+        .trend-down { color: #EF4444; }
+        .trend-neutral { color: #6B7280; }
+
+        /* Utilization bars */
+        .utilization-bar { border-radius: 4px; height: 8px; transition: all 0.3s ease; }
+        .utilization-low { background: #10B981; }
+        .utilization-medium { background: #F59E0B; }
+        .utilization-high { background: #EF4444; }
+
+        /* Approval cards */
+        .approval-card { transition: all 0.3s ease; animation: slideIn 0.3s ease; }
+        .approval-card.removing { animation: slideOut 0.3s ease forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOut { to { opacity: 0; transform: translateX(20px); } }
+
+        /* Tree node styles */
+        .tree-node { cursor: pointer; padding: 8px; border-radius: 6px; margin: 4px 0; transition: all 0.2s ease; }
+        .tree-node:hover { background: rgba(13, 148, 136, 0.1); }
+        .tree-node-expanded .tree-children { max-height: 1000px; overflow: hidden; }
+        .tree-node-collapsed .tree-children { max-height: 0; overflow: hidden; }
+        .tree-toggle { cursor: pointer; display: inline-block; width: 20px; }
+
+        /* Badge */
+        .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 50%; background: #DC2626; color: white; font-size: 12px; font-weight: bold; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .modal { background: white; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 25px 50px rgba(0,0,0,0.15); }
+
+        /* Waterfall chart */
+        .waterfall-item { display: flex; align-items: center; margin: 12px 0; }
+        .waterfall-bar { display: flex; flex: 1; height: 32px; border-radius: 6px; overflow: hidden; margin-left: 16px; }
+        .waterfall-segment { display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600; }
+
+        /* SVG Charts */
+        .chart-line { stroke: #0D9488; stroke-width: 2; fill: none; }
+        .chart-point { fill: #0D9488; }
+
+        /* MCC Grid */
+        .mcc-grid { display: grid; grid-template-columns: auto repeat(6, 1fr); gap: 12px; align-items: center; }
+        .mcc-cell { padding: 12px; text-align: center; font-size: 14px; }
+        .mcc-allowed { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+        .mcc-blocked { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+        .mcc-warning { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+
+        /* Page transitions */
+        .page-transition { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Responsive sidebar */
+        @media (max-width: 768px) {
+            .sidebar-text { display: none; }
+            .sidebar-icon { width: 100%; text-align: center; }
+        }
+
+        /* Pulse animation */
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+    <div id="loading" class="loading-screen">
+        <div>
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading Nexo Admin Portal...</div>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Mock data
+        const mockCardholders = [
+            { id: 1, name: 'Rajesh Kumar', dept: 'Engineering', status: 'Active', limit: 500000, utilized: 245000, lastTx: '2026-03-05' },
+            { id: 2, name: 'Priya Sharma', dept: 'Sales', status: 'Active', limit: 400000, utilized: 180000, lastTx: '2026-03-05' },
+            { id: 3, name: 'Amit Patel', dept: 'Engineering', status: 'Active', limit: 450000, utilized: 220000, lastTx: '2026-03-04' },
+            { id: 4, name: 'Neha Singh', dept: 'Marketing', status: 'Active', limit: 300000, utilized: 120000, lastTx: '2026-03-05' },
+            { id: 5, name: 'Vikram Desai', dept: 'Sales', status: 'Active', limit: 500000, utilized: 310000, lastTx: '2026-03-05' },
+            { id: 6, name: 'Anjali Gupta', dept: 'Operations', status: 'Active', limit: 250000, utilized: 95000, lastTx: '2026-03-04' },
+            { id: 7, name: 'Mohit Joshi', dept: 'Engineering', status: 'Active', limit: 480000, utilized: 205000, lastTx: '2026-03-05' },
+            { id: 8, name: 'Kavya Nair', dept: 'HR', status: 'Inactive', limit: 150000, utilized: 85000, lastTx: '2026-02-28' },
+            { id: 9, name: 'Sanjay Reddy', dept: 'Sales', status: 'Active', limit: 420000, utilized: 250000, lastTx: '2026-03-05' },
+            { id: 10, name: 'Deepak Verma', dept: 'Engineering', status: 'Active', limit: 490000, utilized: 180000, lastTx: '2026-03-03' },
+            { id: 11, name: 'Isha Malhotra', dept: 'Marketing', status: 'Active', limit: 280000, utilized: 150000, lastTx: '2026-03-05' },
+            { id: 12, name: 'Arjun Nambiar', dept: 'Operations', status: 'Active', limit: 200000, utilized: 75000, lastTx: '2026-03-02' },
+            { id: 13, name: 'Sneha Bhat', dept: 'Engineering', status: 'Active', limit: 510000, utilized: 310000, lastTx: '2026-03-05' },
+            { id: 14, name: 'Rohan Chopra', dept: 'Sales', status: 'Active', limit: 450000, utilized: 220000, lastTx: '2026-03-05' },
+            { id: 15, name: 'Divya Iyer', dept: 'HR', status: 'Active', limit: 180000, utilized: 95000, lastTx: '2026-03-01' },
+        ];
+
+        const mockTransactions = [
+            { id: 1, date: '2026-03-05', cardholder: 'Rajesh Kumar', amount: 45000, vendor: 'AWS Services', dept: 'Engineering', mcc: 'SaaS', status: 'Approved' },
+            { id: 2, date: '2026-03-05', cardholder: 'Priya Sharma', amount: 65000, vendor: 'MakeMyTrip Flights', dept: 'Sales', mcc: 'Travel', status: 'Approved' },
+            { id: 3, date: '2026-03-05', cardholder: 'Neha Singh', amount: 28000, vendor: 'Eventbrite Event', dept: 'Marketing', mcc: 'Entertainment', status: 'Approved' },
+            { id: 4, date: '2026-03-05', cardholder: 'Vikram Desai', amount: 35000, vendor: 'Hotel Leela', dept: 'Sales', mcc: 'Travel', status: 'Approved' },
+            { id: 5, date: '2026-03-04', cardholder: 'Amit Patel', amount: 12500, vendor: 'Dominos Food', dept: 'Engineering', mcc: 'Food', status: 'Approved' },
+            { id: 6, date: '2026-03-04', cardholder: 'Anjali Gupta', amount: 8500, vendor: 'IOCL Fuel', dept: 'Operations', mcc: 'Fuel', status: 'Approved' },
+            { id: 7, date: '2026-03-04', cardholder: 'Sanjay Reddy', amount: 55000, vendor: 'Marriott Hotel', dept: 'Sales', mcc: 'Travel', status: 'Approved' },
+            { id: 8, date: '2026-03-03', cardholder: 'Mohit Joshi', amount: 89000, vendor: 'Freshworks License', dept: 'Engineering', mcc: 'SaaS', status: 'Approved' },
+            { id: 9, date: '2026-03-03', cardholder: 'Isha Malhotra', amount: 42000, vendor: 'LinkedIn Ads', dept: 'Marketing', mcc: 'SaaS', status: 'Approved' },
+            { id: 10, date: '2026-03-02', cardholder: 'Deepak Verma', amount: 5600, vendor: 'Zomato Food', dept: 'Engineering', mcc: 'Food', status: 'Approved' },
+        ];
+
+        const mockApprovals = [
+            { id: 1, type: 'invoice', requester: 'Rajesh Kumar', dept: 'Engineering', amount: 345000, desc: 'AWS monthly bill', timeAgo: '2 hours', icon: 'FileText' },
+            { id: 2, type: 'invoice', requester: 'Anjali Gupta', dept: 'Operations', amount: 180000, desc: 'WeWork rent', timeAgo: '6 hours', icon: 'FileText' },
+            { id: 3, type: 'transaction', requester: 'Priya Sharma', dept: 'Sales', amount: 75000, desc: 'MakeMyTrip flights to Bangalore', timeAgo: '1 hour', icon: 'CreditCard' },
+            { id: 4, type: 'policy', requester: 'Neha Singh', dept: 'Marketing', amount: 0, desc: 'Request to unblock Entertainment MCC for event', timeAgo: '12 hours', icon: 'Shield' },
+            { id: 5, type: 'realloc', requester: 'Finance Team', dept: 'Admin', amount: 200000, desc: 'Credit reallocation: ₹2L from HR to Sales', timeAgo: '4 hours', icon: 'Zap' },
+            { id: 6, type: 'invoice', requester: 'Mohit Joshi', dept: 'Engineering', amount: 45000, desc: 'Freshworks annual subscription', timeAgo: '30 minutes', icon: 'FileText' },
+            { id: 7, type: 'vendor', requester: 'Arjun Nambiar', dept: 'Operations', amount: 0, desc: 'New vendor: Urban Company (Facilities)', timeAgo: '8 hours', icon: 'Plus' },
+        ];
+
+        const departmentData = [
+            { name: 'Engineering', budget: 2000000, spent: 1245000, cardholders: 14 },
+            { name: 'Sales', budget: 1500000, spent: 1120000, cardholders: 8 },
+            { name: 'Marketing', budget: 1000000, spent: 630000, cardholders: 6 },
+            { name: 'Operations', budget: 800000, spent: 415000, cardholders: 5 },
+            { name: 'HR', budget: 500000, spent: 280000, cardholders: 3 },
+        ];
+
+        const hierarchyData = {
+            id: 'nexo-corp',
+            name: 'Nexo Corp',
+            type: 'Master',
+            credit: 10000000,
+            cardholders: 36,
+            children: [
+                {
+                    id: 'india-ops',
+                    name: 'India Operations',
+                    type: 'Region',
+                    credit: 7000000,
+                    cardholders: 32,
+                    children: [
+                        {
+                            id: 'eng',
+                            name: 'Engineering',
+                            type: 'Department',
+                            credit: 2000000,
+                            cardholders: 14,
+                            children: [
+                                { id: 'fe', name: 'Frontend Team', type: 'Team', credit: 800000, cardholders: 5, children: [] },
+                                { id: 'be', name: 'Backend Team', type: 'Team', credit: 700000, cardholders: 5, children: [] },
+                                { id: 'devops', name: 'DevOps', type: 'Team', credit: 500000, cardholders: 4, children: [] },
+                            ]
+                        },
+                        {
+                            id: 'sales',
+                            name: 'Sales',
+                            type: 'Department',
+                            credit: 1500000,
+                            cardholders: 8,
+                            children: [
+                                { id: 'ent', name: 'Enterprise', type: 'Team', credit: 1000000, cardholders: 5, children: [] },
+                                { id: 'smb', name: 'SMB', type: 'Team', credit: 500000, cardholders: 3, children: [] },
+                            ]
+                        },
+                        { id: 'marketing', name: 'Marketing', type: 'Department', credit: 1000000, cardholders: 6, children: [] },
+                        { id: 'ops', name: 'Operations', type: 'Department', credit: 800000, cardholders: 5, children: [] },
+                        { id: 'hr', name: 'HR', type: 'Department', credit: 500000, cardholders: 3, children: [] },
+                    ]
+                },
+                {
+                    id: 'us-ops',
+                    name: 'US Operations',
+                    type: 'Region',
+                    credit: 3000000,
+                    cardholders: 4,
+                    children: [
+                        { id: 'sales-us', name: 'Sales US', type: 'Department', credit: 3000000, cardholders: 4, children: [] },
+                    ]
+                },
+            ]
+        };
+
+        // SVG Charts
+        const SimpleLineChart = ({ data }) => {
+            const points = data.map((v, i) => ({ x: (i / (data.length - 1)) * 300, y: 80 - (v / Math.max(...data)) * 60, v }));
+            const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+            return (
+                <svg viewBox="0 0 300 100" className="w-full h-48">
+                    <path d={pathData} className="chart-line" />
+                    {points.map((p, i) => (
+                        <circle key={i} cx={p.x} cy={p.y} r="2" className="chart-point" />
+                    ))}
+                </svg>
+            );
+        };
+
+        const DepartmentChart = ({ data }) => {
+            const total = data.reduce((s, d) => s + d.spent, 0);
+            const angles = data.map(d => (d.spent / total) * 360);
+            let currentAngle = 0;
+            return (
+                <div className="flex flex-col items-center">
+                    <svg viewBox="0 0 200 200" className="w-48 h-48">
+                        {data.map((d, i) => {
+                            const percent = (d.spent / total) * 100;
+                            const startAngle = currentAngle * (Math.PI / 180);
+                            const endAngle = (currentAngle + angles[i]) * (Math.PI / 180);
+                            const x1 = 100 + 70 * Math.cos(startAngle);
+                            const y1 = 100 + 70 * Math.sin(startAngle);
+                            const x2 = 100 + 70 * Math.cos(endAngle);
+                            const y2 = 100 + 70 * Math.sin(endAngle);
+                            const largeArc = angles[i] > 180 ? 1 : 0;
+                            const pathData = `M 100 100 L ${x1} ${y1} A 70 70 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                            const colors = ['#0D9488', '#06B6D4', '#3B82F6', '#8B5CF6', '#EC4899'];
+                            currentAngle += angles[i];
+                            return <path key={i} d={pathData} fill={colors[i % colors.length]} />;
+                        })}
+                    </svg>
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                        {data.map((d, i) => {
+                            const colors = ['#0D9488', '#06B6D4', '#3B82F6', '#8B5CF6', '#EC4899'];
+                            return (
+                                <div key={i} className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ background: colors[i % colors.length] }}></div>
+                                    <span>{d.name}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        // Navigation
+        const SidebarNav = ({ currentPage, setCurrentPage, pendingCount, sidebarOpen, setSidebarOpen }) => {
+            const navItems = [
+                { id: 'dashboard', label: 'Dashboard', icon: 'Home' },
+                { id: 'hierarchy', label: 'Hierarchy', icon: 'GitBranch' },
+                { id: 'policies', label: 'Spend Policies', icon: 'Shield' },
+                { id: 'credit', label: 'Credit Allocation', icon: 'CreditCard' },
+                { id: 'approvals', label: 'Approvals', icon: 'CheckCircle', badge: pendingCount },
+                { id: 'cardholders', label: 'Cardholders', icon: 'Users' },
+                { id: 'reports', label: 'Reports', icon: 'BarChart3' },
+                { id: 'settings', label: 'Settings', icon: 'Settings' },
+            ];
+
+            return (
+                <div className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'} shadow-lg`}>
+                    <div className="p-4 border-b border-slate-700">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center font-bold text-lg">N</div>
+                            {sidebarOpen && <span className="font-bold text-lg">NEXO</span>}
+                        </div>
+                    </div>
+                    <nav className="p-3 space-y-1 mt-6">
+                        {navItems.map(item => (
+                            <button
+                                key={item.id}
+                                onClick={() => setCurrentPage(item.id)}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                                    currentPage === item.id
+                                        ? 'bg-teal-500 bg-opacity-20 border-l-4 border-teal-500'
+                                        : 'hover:bg-slate-700 border-l-4 border-transparent'
+                                }`}
+                            >
+                                <i data-lucide={item.icon} className="w-5 h-5 flex-shrink-0" />
+                                {sidebarOpen && (
+                                    <>
+                                        <span className="flex-1 text-left">{item.label}</span>
+                                        {item.badge && <span className="badge text-xs">{item.badge}</span>}
+                                    </>
+                                )}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            );
+        };
+
+        const TopHeader = ({ user, company, sidebarOpen, setSidebarOpen, currentPage }) => {
+            const pageNames = { dashboard: 'Dashboard', hierarchy: 'Organization Hierarchy', policies: 'Spend Policies', credit: 'Credit Allocation', approvals: 'Approvals', cardholders: 'Cardholders', reports: 'Reports', settings: 'Settings' };
+            return (
+                <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+                    <div className="flex items-center justify-between px-6 py-4">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                            >
+                                <i data-lucide={sidebarOpen ? 'ChevronLeft' : 'Menu'} className="w-5 h-5" />
+                            </button>
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase tracking-wider">Admin Portal</p>
+                                <h1 className="text-xl font-bold text-slate-900">{pageNames[currentPage] || 'Dashboard'}</h1>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-6">
+                            <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-gray-50 cursor-pointer">
+                                <option>{company}</option>
+                                <option>Nexo Corp US</option>
+                                <option>Nexo Labs</option>
+                            </select>
+                            <button className="p-2 hover:bg-gray-100 rounded-lg transition relative">
+                                <i data-lucide="Bell" className="w-5 h-5" />
+                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                            </button>
+                            <div className="h-10 w-10 bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold">RK</div>
+                            <div className="text-sm">
+                                <p className="font-semibold text-slate-900">{user}</p>
+                                <p className="text-xs text-gray-500">CFO</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Login Screen
+        const LoginScreen = ({ onLogin }) => {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 flex items-center justify-center p-4">
+                    <div className="w-full max-w-md">
+                        <div className="bg-white rounded-xl shadow-2xl p-8">
+                            <div className="flex flex-col items-center mb-8">
+                                <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl mb-4">N</div>
+                                <h1 className="text-3xl font-bold text-slate-900">Nexo</h1>
+                                <p className="text-gray-500 text-sm mt-1">Admin Portal</p>
+                            </div>
+                            <form onSubmit={(e) => { e.preventDefault(); onLogin(email || 'admin@nexo.money', 'Any password works'); }} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="admin@nexo.money"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    />
+                                </div>
+                                <button type="submit" className="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white py-2 rounded-lg font-semibold hover:shadow-lg transition">
+                                    Sign In
+                                </button>
+                            </form>
+                            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                                <p className="font-semibold">Demo Mode</p>
+                                <p>Use any email and password to login</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Dashboard
+        const Dashboard = ({ pendingCount }) => {
+            const spendData = [1200000, 1450000, 1380000, 1520000, 1680000, 1720000, 1850000, 2100000, 2050000, 1920000, 2200000, 2150000, 2300000, 2250000, 2400000, 2450000, 2380000, 2550000, 2600000, 2580000, 2720000, 2800000, 2650000, 2900000, 2850000, 3100000, 3050000, 3200000, 2980000, 3150000];
+
+            return (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="kpi-card bg-white rounded-xl p-6 border border-gray-200">
+                            <div className="flex justify-between items-start mb-2">
+                                <p className="text-gray-600 text-sm font-medium">Total Spend (MTD)</p>
+                                <span className="trend-up text-lg">↑</span>
+                            </div>
+                            <p className="text-3xl font-bold text-slate-900">₹47,82,500</p>
+                            <p className="text-xs text-gray-500 mt-2">+12% vs last month</p>
+                        </div>
+                        <div className="kpi-card bg-white rounded-xl p-6 border border-gray-200">
+                            <p className="text-gray-600 text-sm font-medium mb-2">Available Credit</p>
+                            <p className="text-3xl font-bold text-slate-900">₹52,17,500</p>
+                            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-teal-500 h-2 rounded-full" style={{ width: '52%' }}></div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">of ₹1,00,00,000</p>
+                        </div>
+                        <div className="kpi-card bg-white rounded-xl p-6 border border-gray-200">
+                            <div className="flex justify-between items-start">
+                                <p className="text-gray-600 text-sm font-medium">Pending Approvals</p>
+                                <span className="badge">{pendingCount}</span>
+                            </div>
+                            <p className="text-3xl font-bold text-slate-900 mt-4">{pendingCount}</p>
+                            <p className="text-xs text-gray-500 mt-2">Requires action</p>
+                        </div>
+                        <div className="kpi-card bg-white rounded-xl p-6 border border-gray-200">
+                            <p className="text-gray-600 text-sm font-medium mb-2">Reward Points</p>
+                            <p className="text-3xl font-bold text-slate-900">1,85,400</p>
+                            <p className="text-xs text-teal-600 font-semibold mt-2">Gold Tier</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-200">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-4">Spend Trend (30 Days)</h3>
+                            <SimpleLineChart data={spendData} />
+                        </div>
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-4">Alerts</h3>
+                            <div className="space-y-3">
+                                <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+                                    <p className="text-sm font-medium text-yellow-900">Sales dept at 75%</p>
+                                    <p className="text-xs text-yellow-700">Budget utilization high</p>
+                                </div>
+                                <div className="p-3 bg-red-50 border-l-4 border-red-500 rounded">
+                                    <p className="text-sm font-medium text-red-900">3 AP invoices pending</p>
+                                    <p className="text-xs text-red-700">Overdue > 24 hours</p>
+                                </div>
+                                <div className="p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                                    <p className="text-sm font-medium text-blue-900">Temp credit expires</p>
+                                    <p className="text-xs text-blue-700">Marketing in 2 days</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">Department Spend Breakdown</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-200">
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Department</th>
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">Budget</th>
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">Spent</th>
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">Available</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">Utilization</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">Trend</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {departmentData.map((dept) => {
+                                        const util = (dept.spent / dept.budget) * 100;
+                                        const color = util < 60 ? 'utilization-low' : util < 80 ? 'utilization-medium' : 'utilization-high';
+                                        return (
+                                            <tr key={dept.name} className="border-b border-gray-100 hover:bg-gray-50">
+                                                <td className="py-3 px-4 font-medium text-slate-900">{dept.name}</td>
+                                                <td className="py-3 px-4 text-right text-gray-700">₹{(dept.budget/100000).toFixed(1)}L</td>
+                                                <td className="py-3 px-4 text-right text-gray-700">₹{(dept.spent/100000).toFixed(1)}L</td>
+                                                <td className="py-3 px-4 text-right text-gray-700">₹{((dept.budget-dept.spent)/100000).toFixed(1)}L</td>
+                                                <td className="py-3 px-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="utilization-bar" style={{ width: '100px' }}>
+                                                            <div className={`utilization-bar ${color}`} style={{ width: `${util}%`, background: color === 'utilization-low' ? '#10B981' : color === 'utilization-medium' ? '#F59E0B' : '#EF4444' }}></div>
+                                                        </div>
+                                                        <span className="text-xs text-gray-600">{util.toFixed(0)}%</span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-4 text-center">
+                                                    {dept.name === 'Engineering' && <span className="trend-up">↑</span>}
+                                                    {dept.name === 'Sales' && <span className="trend-up">↑</span>}
+                                                    {dept.name === 'Marketing' && <span className="trend-down">↓</span>}
+                                                    {dept.name === 'Operations' && <span className="trend-neutral">→</span>}
+                                                    {dept.name === 'HR' && <span className="trend-up">↑</span>}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Transactions</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-200">
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Cardholder</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Vendor</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Department</th>
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {mockTransactions.map((tx) => (
+                                        <tr key={tx.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <td className="py-3 px-4 text-gray-600">{tx.date}</td>
+                                            <td className="py-3 px-4 font-medium text-slate-900">{tx.cardholder}</td>
+                                            <td className="py-3 px-4 text-gray-700">{tx.vendor}</td>
+                                            <td className="py-3 px-4 text-gray-700">{tx.dept}</td>
+                                            <td className="py-3 px-4 text-right font-semibold text-slate-900">₹{(tx.amount/100000).toFixed(2)}L</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Hierarchy Manager
+        const TreeNode = ({ node, onSelect }) => {
+            const [expanded, setExpanded] = useState(true);
+            const hasChildren = node.children && node.children.length > 0;
+
+            return (
+                <div>
+                    <div
+                        className="tree-node bg-white border border-gray-200 flex items-center gap-2"
+                        onClick={() => onSelect(node)}
+                    >
+                        {hasChildren && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpanded(!expanded);
+                                }}
+                                className="tree-toggle text-teal-600"
+                            >
+                                {expanded ? '▼' : '▶'}
+                            </button>
+                        )}
+                        <div className="flex-1">
+                            <p className="font-medium text-slate-900">{node.name}</p>
+                            <p className="text-xs text-gray-500">{node.type} • ₹{(node.credit/100000).toFixed(0)}L • {node.cardholders} cardholders</p>
+                        </div>
+                    </div>
+                    {expanded && hasChildren && (
+                        <div className="ml-6 mt-1 border-l-2 border-gray-200 pl-0 space-y-1">
+                            {node.children.map((child) => (
+                                <TreeNode key={child.id} node={child} onSelect={onSelect} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const Hierarchy = () => {
+            const [selectedNode, setSelectedNode] = useState(hierarchyData);
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-200">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-slate-900">Organization Structure</h3>
+                            <button className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">+ Add Node</button>
+                        </div>
+                        <div className="space-y-2">
+                            <TreeNode node={hierarchyData} onSelect={setSelectedNode} />
+                        </div>
+                    </div>
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">Node Details</h3>
+                        {selectedNode && (
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase">Name</p>
+                                    <p className="font-semibold text-slate-900">{selectedNode.name}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase">Type</p>
+                                    <p className="font-semibold text-slate-900">{selectedNode.type}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase">Credit Allocated</p>
+                                    <p className="font-semibold text-teal-600 text-lg">₹{(selectedNode.credit/100000).toFixed(0)}L</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase">Cardholders</p>
+                                    <p className="font-semibold text-slate-900">{selectedNode.cardholders}</p>
+                                </div>
+                                <button className="w-full mt-4 px-4 py-2 border-2 border-teal-600 text-teal-600 rounded-lg font-medium hover:bg-teal-50">
+                                    Edit Node
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // Spend Policies
+        const Policies = () => {
+            const mccCategories = ['Travel', 'Food', 'SaaS', 'Office', 'Entertainment', 'Fuel'];
+            const policies = {
+                'Company Default': { Travel: '₹50L/yr', Food: '₹10L/yr', SaaS: '₹30L/yr', Office: '₹5L/yr', Entertainment: 'Blocked', Fuel: '₹8L/yr' },
+                'Engineering': { Travel: '₹5L/yr', Food: '₹2L/yr', SaaS: '₹15L/yr', Office: '₹1L/yr', Entertainment: 'Blocked', Fuel: '₹2L/yr' },
+                'Sales': { Travel: '₹12L/yr', Food: '₹4L/yr', SaaS: '₹3L/yr', Office: '₹1L/yr', Entertainment: '₹2L/yr', Fuel: '₹5L/yr' },
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-slate-900">MCC Policy Grid</h3>
+                            <button className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">+ Create Policy</button>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-200">
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Department</th>
+                                        {mccCategories.map((mcc) => (
+                                            <th key={mcc} className="text-center py-3 px-4 font-semibold text-gray-700">{mcc}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.entries(policies).map(([dept, policy]) => (
+                                        <tr key={dept} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <td className="py-3 px-4 font-medium text-slate-900">{dept}</td>
+                                            {mccCategories.map((mcc) => {
+                                                const val = policy[mcc];
+                                                const type = val === 'Blocked' ? 'blocked' : val.includes('L') ? 'allowed' : 'warning';
+                                                return (
+                                                    <td key={mcc} className={`py-3 px-4 text-center text-xs font-semibold mcc-${type} rounded`}>
+                                                        {val}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">Active Policies</h3>
+                        <div className="space-y-3">
+                            {[
+                                { dept: 'Engineering', mcc: 'SaaS', limit: '₹15L/yr', action: 'Warn on breach' },
+                                { dept: 'Sales', mcc: 'Travel', limit: '₹12L/yr', action: 'Requires approval' },
+                                { dept: 'Marketing', mcc: 'Entertainment', limit: 'Blocked', action: 'Decline' },
+                            ].map((p, i) => (
+                                <div key={i} className="flex justify-between items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                                    <div>
+                                        <p className="font-medium text-slate-900">{p.dept} → {p.mcc}</p>
+                                        <p className="text-xs text-gray-500">{p.action}</p>
+                                    </div>
+                                    <p className="font-semibold text-slate-900">{p.limit}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Credit Allocation
+        const Credit = () => {
+            return (
+                <div className="space-y-6">
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-6">Credit Waterfall</h3>
+                        <div className="space-y-4">
+                            {[
+                                { name: 'Master Credit Line', allocated: 10000000, used: 7960000, level: 0 },
+                                { name: 'India Operations', allocated: 7000000, used: 4782500, level: 1 },
+                                { name: '  • Engineering', allocated: 2000000, used: 1245000, level: 2 },
+                                { name: '  • Sales', allocated: 1500000, used: 1120000, level: 2 },
+                                { name: '  • Marketing', allocated: 1000000, used: 630000, level: 2 },
+                                { name: '  • Operations', allocated: 800000, used: 415000, level: 2 },
+                                { name: '  • HR', allocated: 500000, used: 280000, level: 2 },
+                                { name: 'US Operations', allocated: 3000000, used: 1850000, level: 1 },
+                                { name: '  • Sales US', allocated: 3000000, used: 1850000, level: 2 },
+                            ].map((item, i) => {
+                                const util = (item.used / item.allocated) * 100;
+                                return (
+                                    <div key={i} style={{ marginLeft: `${item.level * 20}px` }} className="waterfall-item">
+                                        <div className="w-32 text-sm font-medium text-slate-900">{item.name}</div>
+                                        <div className="waterfall-bar">
+                                            <div className="waterfall-segment" style={{ width: `${util}%`, background: '#0D9488' }}>
+                                                {util > 15 && <span>{util.toFixed(0)}%</span>}
+                                            </div>
+                                            <div className="waterfall-segment" style={{ width: `${100-util}%`, background: '#E5E7EB' }}>
+                                            </div>
+                                        </div>
+                                        <div className="w-48 text-sm text-right text-gray-600">
+                                            ₹{(item.used/100000).toFixed(1)}L / ₹{(item.allocated/100000).toFixed(1)}L
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-4">Temporary Increases</h3>
+                            <div className="space-y-3">
+                                {[
+                                    { dept: 'Marketing', amount: '₹25L', expires: 'in 2 days', icon: '⏰' },
+                                    { dept: 'Sales', amount: '₹15L', expires: 'in 8 days', icon: '⏰' },
+                                ].map((item, i) => (
+                                    <div key={i} className="p-3 border border-gray-200 rounded-lg">
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <p className="font-medium text-slate-900">{item.dept}</p>
+                                                <p className="text-xs text-gray-500">Temporary +{item.amount}</p>
+                                            </div>
+                                            <p className="text-sm font-semibold text-orange-600">{item.expires}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-4">Actions</h3>
+                            <div className="space-y-3">
+                                <button className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700">Allocate Credit</button>
+                                <button className="w-full px-4 py-2 border-2 border-teal-600 text-teal-600 rounded-lg font-medium hover:bg-teal-50">Reallocate Credit</button>
+                                <button className="w-full px-4 py-2 border-2 border-teal-600 text-teal-600 rounded-lg font-medium hover:bg-teal-50">Increase Temporarily</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Approvals
+        const Approvals = ({ approvals, onApproveReject }) => {
+            const [approvalList, setApprovalList] = useState(approvals);
+            const pending = approvalList.filter(a => !a.status);
+            const approved = approvalList.filter(a => a.status === 'approved');
+            const rejected = approvalList.filter(a => a.status === 'rejected');
+
+            const handleApprove = (id) => {
+                setApprovalList(approvalList.map(a => a.id === id ? { ...a, status: 'approved' } : a));
+            };
+
+            const handleReject = (id) => {
+                setApprovalList(approvalList.map(a => a.id === id ? { ...a, status: 'rejected' } : a));
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex gap-2 border-b border-gray-200">
+                        {[
+                            { id: 'pending', label: `Pending (${pending.length})` },
+                            { id: 'approved', label: `Approved (${approved.length})` },
+                            { id: 'rejected', label: `Rejected (${rejected.length})` },
+                        ].map((tab) => (
+                            <button key={tab.id} className="px-4 py-3 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium text-gray-600">
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="space-y-3">
+                        {pending.map((approval) => (
+                            <div key={approval.id} className="approval-card bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md">
+                                <div className="flex gap-4">
+                                    <div className="flex-shrink-0 w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center text-teal-600 font-bold">
+                                        {approval.type === 'invoice' && '📄'}
+                                        {approval.type === 'transaction' && '💳'}
+                                        {approval.type === 'policy' && '🛡️'}
+                                        {approval.type === 'realloc' && '⚡'}
+                                        {approval.type === 'vendor' && '➕'}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <p className="font-semibold text-slate-900">{approval.requester}</p>
+                                            <span className="text-xs text-gray-500">{approval.timeAgo}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-600 mb-2">{approval.desc}</p>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs text-gray-500">{approval.dept}</span>
+                                            {approval.amount > 0 && <span className="font-semibold text-slate-900">₹{(approval.amount/100000).toFixed(2)}L</span>}
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleApprove(approval.id)}
+                                            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                                        >
+                                            ✓ Approve
+                                        </button>
+                                        <button
+                                            onClick={() => handleReject(approval.id)}
+                                            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700"
+                                        >
+                                            ✕ Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {pending.length === 0 && <div className="text-center py-8 text-gray-500">No pending approvals</div>}
+                    </div>
+                </div>
+            );
+        };
+
+        // Cardholders
+        const Cardholders = () => {
+            const [cardholders, setCardholders] = useState(mockCardholders);
+            const [filterDept, setFilterDept] = useState('All');
+            const [expandedId, setExpandedId] = useState(null);
+
+            const filtered = filterDept === 'All' ? cardholders : cardholders.filter(c => c.dept === filterDept);
+
+            return (
+                <div className="space-y-6">
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-slate-900">All Cardholders</h3>
+                            <select
+                                value={filterDept}
+                                onChange={(e) => setFilterDept(e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-slate-700 bg-white"
+                            >
+                                <option>All</option>
+                                <option>Engineering</option>
+                                <option>Sales</option>
+                                <option>Marketing</option>
+                                <option>Operations</option>
+                                <option>HR</option>
+                            </select>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-200">
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Department</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">Limit</th>
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">Utilized</th>
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">Available</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map((ch) => (
+                                        <React.Fragment key={ch.id}>
+                                            <tr
+                                                onClick={() => setExpandedId(expandedId === ch.id ? null : ch.id)}
+                                                className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                                            >
+                                                <td className="py-3 px-4 font-medium text-slate-900">{ch.name}</td>
+                                                <td className="py-3 px-4 text-gray-700">{ch.dept}</td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${ch.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                        {ch.status}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4 text-right font-semibold text-slate-900">₹{(ch.limit/100000).toFixed(1)}L</td>
+                                                <td className="py-3 px-4 text-right font-semibold text-slate-900">₹{(ch.utilized/100000).toFixed(1)}L</td>
+                                                <td className="py-3 px-4 text-right text-teal-600 font-semibold">₹{((ch.limit - ch.utilized)/100000).toFixed(1)}L</td>
+                                            </tr>
+                                            {expandedId === ch.id && (
+                                                <tr className="bg-gray-50 border-b border-gray-100">
+                                                    <td colSpan="6" className="py-4 px-4">
+                                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                                            <div>
+                                                                <p className="text-xs text-gray-500 uppercase">Last Transaction</p>
+                                                                <p className="font-medium text-slate-900">{ch.lastTx}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-xs text-gray-500 uppercase">Utilization Rate</p>
+                                                                <p className="font-medium text-slate-900">{((ch.utilized / ch.limit) * 100).toFixed(1)}%</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Reports
+        const Reports = () => {
+            const spendData = departmentData;
+            const totalSpend = spendData.reduce((s, d) => s + d.spent, 0);
+            const avgPerCardholder = totalSpend / mockCardholders.length;
+            const topDept = spendData.reduce((a, b) => a.spent > b.spent ? a : b);
+            const monthlyData = [1200000, 1450000, 1680000, 1920000, 2250000, 2850000];
+
+            return (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
+                            <p className="text-gray-600 text-sm font-medium">Total Spend (6m)</p>
+                            <p className="text-3xl font-bold text-slate-900 mt-2">₹{(totalSpend/10000000).toFixed(1)}Cr</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
+                            <p className="text-gray-600 text-sm font-medium">Avg per Cardholder</p>
+                            <p className="text-3xl font-bold text-slate-900 mt-2">₹{(avgPerCardholder/100000).toFixed(1)}L</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
+                            <p className="text-gray-600 text-sm font-medium">Top Department</p>
+                            <p className="text-2xl font-bold text-slate-900 mt-2">{topDept.name}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
+                            <p className="text-gray-600 text-sm font-medium">MCC Category</p>
+                            <p className="text-2xl font-bold text-slate-900 mt-2">SaaS</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-4">Monthly Spend Trend</h3>
+                            <SimpleLineChart data={monthlyData} />
+                        </div>
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-4">Department Breakdown</h3>
+                            <DepartmentChart data={spendData} />
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                        <button className="px-6 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700">↓ Download Report</button>
+                    </div>
+                </div>
+            );
+        };
+
+        // Settings
+        const Settings = () => (
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Settings</h3>
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                        <div>
+                            <p className="font-medium text-slate-900">Approval Notifications</p>
+                            <p className="text-sm text-gray-500">Notify on pending approvals</p>
+                        </div>
+                        <input type="checkbox" defaultChecked className="w-5 h-5 text-teal-600 rounded" />
+                    </div>
+                    <div className="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                        <div>
+                            <p className="font-medium text-slate-900">Daily Spend Digest</p>
+                            <p className="text-sm text-gray-500">Email summary of daily spend</p>
+                        </div>
+                        <input type="checkbox" defaultChecked className="w-5 h-5 text-teal-600 rounded" />
+                    </div>
+                    <div className="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                        <div>
+                            <p className="font-medium text-slate-900">Budget Alerts</p>
+                            <p className="text-sm text-gray-500">Alert when department exceeds 80%</p>
+                        </div>
+                        <input type="checkbox" defaultChecked className="w-5 h-5 text-teal-600 rounded" />
+                    </div>
+                </div>
+            </div>
+        );
+
+        // Main App
+        const App = () => {
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [user, setUser] = useState('');
+            const [currentPage, setCurrentPage] = useState('dashboard');
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+            const [approvals, setApprovals] = useState(mockApprovals.map(a => ({ ...a, status: null })));
+
+            const pendingCount = approvals.filter(a => !a.status).length;
+
+            const handleLogin = (email, password) => {
+                setUser(email.split('@')[0]);
+                setIsLoggedIn(true);
+            };
+
+            if (!isLoggedIn) {
+                return <LoginScreen onLogin={handleLogin} />;
+            }
+
+            return (
+                <div className="flex h-screen bg-gray-50">
+                    <SidebarNav currentPage={currentPage} setCurrentPage={setCurrentPage} pendingCount={pendingCount} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                    <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
+                        <TopHeader user={user} company="Nexo Corp" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} currentPage={currentPage} />
+                        <main className="flex-1 overflow-auto p-6">
+                            {currentPage === 'dashboard' && <Dashboard pendingCount={pendingCount} />}
+                            {currentPage === 'hierarchy' && <Hierarchy />}
+                            {currentPage === 'policies' && <Policies />}
+                            {currentPage === 'credit' && <Credit />}
+                            {currentPage === 'approvals' && <Approvals approvals={approvals} onApproveReject={setApprovals} />}
+                            {currentPage === 'cardholders' && <Cardholders />}
+                            {currentPage === 'reports' && <Reports />}
+                            {currentPage === 'settings' && <Settings />}
+                        </main>
+                    </div>
+                </div>
+            );
+        };
+
+        // Render app after loading
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+        // Hide loading screen
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loading');
+            if (loadingScreen) {
+                loadingScreen.style.opacity = '0';
+                loadingScreen.style.pointerEvents = 'none';
+                loadingScreen.style.transition = 'opacity 0.3s ease';
+            }
+        }, 500);
+
+        // Initialize Lucide icons after render
+        setTimeout(() => {
+            lucide.createIcons();
+        }, 100);
+    </script>
+</body>
+</html>
