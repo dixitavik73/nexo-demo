@@ -455,7 +455,7 @@
                                             maxLength="1"
                                             value={otp[i]}
                                             onChange={(e) => handleOtpChange(i, e.target.value)}
-                                            className="otp-input"
+                                            className={`otp-input${otp[i] ? ' filled' : ''}`}
                                         />
                                     ))}
                                 </div>
